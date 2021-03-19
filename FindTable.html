@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>FindTable</title>
+	<style type="text/css">
+	textarea {
+		width: 45%;
+		height: 390px;
+	}
+	</style>
+</head>
+<body>
+	<textarea id="content">
+;WITH PreGraLst AS (
+	SELECT *
+	FROM [dbo].[GQE_PreGraLst] AS PGL
+	WHERE PGL.[PG_PreGraduationYear] = @PreGrdYear
+		AND PGL.[PG_Semester] = @PreGrdSem
+)
+SELECT *
+FROM [dbo].[ACC_StdInf] AS SI
+INNER JOIN [dbo].[ACC_BasInf] AS BI
+	ON BI.[BI_ACID] = SI.[SI_ACID]
+INNER JOIN [dbo].[BAS_SclSys] AS SS
+	ON SS.[SS_ID] = SI.[SI_SSID]
+INNER JOIN [dbo].[BAS_Dpt] AS DP
+	ON DP.[DP_ID] = SI.[SI_DEPT]
+INNER JOIN [dbo].[BAS_Grp] AS GR
+	ON GR.[GR_ID] = SI.[SI_GRID]
+LEFT JOIN [dbo].[AAS_CosMstLst] AS CL
+	ON CL.[CL_SchoolYear] = SI.[SI_ClassFrameYear]
+	AND CL.[CL_SSID] = SI.[SI_SSID]
+	AND CL.[CL_DPID] = SI.[SI_DEPT]
+	AND CL.[CL_GRID] = SI.[SI_GRID]
+	AND ((SI.[SI_SGID] IS NULL AND CL.[CL_SGID] IS NULL) OR CL.[CL_SGID] = SI.[SI_SGID])
+	AND CL.[CL_Type] = N'D'
+LEFT JOIN PreGraLst AS PGL
+	ON PGL.[PG_ACID] = SI.[SI_ACID]
+LEFT JOIN [dbo].[BAS_Code] AS CS
+	ON CS.[CD_GROUP] = 'SchoolRoll'
+	AND CS.[CD_CODE] = SI.[SI_STUStatus]
+
+	</textarea>
+	<textarea id="table_list"></textarea>
+	<button id="but_start">GO</button>
+	<script type="text/javascript">
+		var but_start = document.getElementById('but_start');
+		var old_content = document.getElementById('content');
+		var new_content = document.getElementById('table_list');
+
+		var doSomething = function() {
+			
+			
+
+			var ss = old_content.value;
+			if (ss) {
+				let contents = [];
+
+				let m;
+				const regex = /(FROM\s[\S]+|INTO\s[\S]+|JOIN\s[\S]+)(?![\s\S]*\1)/gmi;
+				while ((m = regex.exec(ss)) !== null) {
+				    if (m.index === regex.lastIndex) {
+				        regex.lastIndex++;
+				    }
+				    
+				    contents.push(m[0]);
+				}
+
+				new_content.value = contents.join('\n')
+			}
+			
+		}
+
+		but_start.addEventListener('click', doSomething, false)
+	</script>
+</body>
+</html>
